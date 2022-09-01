@@ -53,8 +53,9 @@ float4 default_combine_hdr_ldr(in float2 texcoord)							// supports multiple so
 {
 #ifdef pc
 	float4 accum=		sample2D(surface_sampler, texcoord);
-	float4 accum_dark=	sample2D(dark_surface_sampler, texcoord);
-	float4 combined= max(accum, accum_dark * DARK_COLOR_MULTIPLIER);		// convert_from_render_targets <-- for some reason this isn't optimized very well
+	float4 accum_dark=	sample2D(dark_surface_sampler, texcoord) * DARK_COLOR_MULTIPLIER;
+	float4 combined = accum_dark * step(accum_dark, (1).rrrr);
+	combined = max(accum, combined);
 #else // XENON
 	
 	float4 accum=		sample2D(surface_sampler, texcoord);
@@ -125,7 +126,9 @@ float3 default_calc_health_overlay(in float2 texcoord, in float3 base_color)
  
 float3 default_calc_shield_overlay(in float2 texcoord, in float3 base_color)
 {
-	float ramp= sample2D(shield_sampler, texcoord).a;	
+	float2 tc = float2(texcoord.x*shield_constants.z + 0.5f-shield_constants.z*0.5f, texcoord.y*shield_constants.w + 0.5f-shield_constants.w*0.5f);
+
+	float ramp= sample2D(shield_sampler, tc).a;	
 	float shield= shield_constants.x;
 
 	float total_shield= ramp - shield;
