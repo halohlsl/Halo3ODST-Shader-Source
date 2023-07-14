@@ -15,7 +15,8 @@
 #define MATERIAL_TYPE_single_lobe_phong 7
 #define MATERIAL_TYPE_hair 8
 #define MATERIAL_TYPE_custom_specular 9
-
+//MATERIAL_TYPE_cook_torrance_pbr_maps is set to unused now value 99. It's done to avoid false include of "cook_torrance.fx"
+#define MATERIAL_TYPE_cook_torrance_pbr_maps 99 
 // all material models must define these 4 functions
 #define CALC_MATERIAL(material) calc_material_##material##_ps
 #define CALC_MATERIAL_SPECULAR_PARAMETERS(material) calc_material_specular_parameters_##material##_ps
@@ -65,7 +66,6 @@ PARAM(float4,	material_texture_xform);				//texture matrix
 PARAM(bool, use_material_texture);
 PARAM(bool, order3_area_specular);
 PARAM(bool, no_dynamic_lights);
-
 
 //*****************************************************************************
 // diffuse only

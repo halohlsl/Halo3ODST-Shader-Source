@@ -153,7 +153,7 @@ DECLARE_MATERIAL(3);
 float4 sample_blend_normalized(float2 texcoord)
 {
 
-	float4 blend= sample2D(blend_map, transform_texcoord(texcoord, blend_map_xform));
+	float4 blend= sampleBiasGlobal2D(blend_map, transform_texcoord(texcoord, blend_map_xform));
 //	blend += 0.00000001f;			// this gets rid of pure black pixels in the blend map.  We've decided that this isn't worth the instruction - just change your blend map
 
 	#if MORPH_DYNAMIC(blend_type)
@@ -201,18 +201,12 @@ void calc_bumpmap(
 	in float4 detail_bump_xform,
 	out float3 bump)
 {
-	bump= sample2D(bump_map, transform_texcoord(texcoord, bump_map_xform)).xyz;
-   
-#if (DX_VERSION == 9) && defined(pc)
-   bump.xy = bump.xy * (255.0f / 127.f) - (128.0f / 127.f);   
-#endif
+	bump= sampleBiasGlobal2D(bump_map, transform_texcoord(texcoord, bump_map_xform)).xyz;
+
 
 #if DETAIL_BUMP_ENABLED
-	float2 detail= sample2D(detail_bump, transform_texcoord(texcoord, detail_bump_xform)).xy;
-   
-#if (DX_VERSION == 9) && defined(pc)
-   detail.xy = detail.xy * (255.0f / 127.f) - (128.0f / 127.f);   
-#endif
+	float2 detail= sampleBiasGlobal2D(detail_bump, transform_texcoord(texcoord, detail_bump_xform)).xy;
+
    
 	bump.xy += detail.xy;
 #endif 
@@ -322,8 +316,8 @@ void albedo_vs(
 COMPILER_IFANY																													\
 if (blend_amount > 0.0)																											\
 {																																\
-	float4 base=	sample2D(base_map_m_##material,	transform_texcoord(original_texcoord.xy, base_map_m_##material##_xform));		\
-	float4 detail=	sample2D(detail_map_m_##material,	transform_texcoord(original_texcoord.xy, detail_map_m_##material##_xform));	\
+	float4 base=	sampleBiasGlobal2D(base_map_m_##material,	transform_texcoord(original_texcoord.xy, base_map_m_##material##_xform));		\
+	float4 detail=	sampleBiasGlobal2D(detail_map_m_##material,	transform_texcoord(original_texcoord.xy, detail_map_m_##material##_xform));	\
 	albedo_accumulate += base * detail * blendweight;																			\
 	{																															\
 		float3 material_bump_normal;																							\
@@ -1647,7 +1641,7 @@ accum_pixel default_dynamic_light_ps(
 	fragment_position_shadow.xyz /= fragment_position_shadow.w;							// projective transform on xy coordinates
 	
 	// apply light gel
-	light_radiance *=  sample2D(dynamic_light_gel_texture, transform_texcoord(fragment_position_shadow.xy, p_dynamic_light_gel_xform));
+	light_radiance *=  sampleBiasGlobal2D(dynamic_light_gel_texture, transform_texcoord(fragment_position_shadow.xy, p_dynamic_light_gel_xform));
 	
 	float4 out_color= 0.0f;	
 	if (dot(light_radiance, light_radiance) > 0.0000001f)									// ###ctchou $PERF unproven 'performance' hack

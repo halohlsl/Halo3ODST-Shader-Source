@@ -17,9 +17,9 @@
 
 //@generate screen
 LOCAL_SAMPLER_2D(displacement_sampler, 0);
-LOCAL_SAMPLER_2D(ldr_buffer, 1);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_ALLWAYS(ldr_buffer, 1);
 #ifndef LDR_ONLY
-LOCAL_SAMPLER_2D(hdr_buffer, 2);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_ALLWAYS(hdr_buffer, 2);
 #endif
 
 struct displacement_output
@@ -60,11 +60,9 @@ accum_pixel default_ps(displacement_output IN, SCREEN_POSITION_INPUT(screen_coor
 #else
 	float2 displacement= 2.0f * max_displacement * screen_constants.zw * (sample2D(displacement_sampler, IN.Texcoord).xy - distortion_offset);		// screen_constants.zw is distortion scale in x and y directions
 #endif
-	float change= dot(displacement, displacement);
-	clip(change> 0.0f ? 1.0f : -1.0f);	// save the texture fetches and the frame buffer write
 	accum_pixel displaced_pixel;
-	// The clamp adds 2 ALU, and is needed only for splitscreen (because we can't automatically clamp to a subrect of a texture)
-	float2 frame_texcoords= clamp((screen_coords + half_pixel_offset) * screen_constants.xy + displacement, window_bounds.xy, window_bounds.zw);
+	
+	float2 frame_texcoords= IN.Texcoord + displacement;
 	displaced_pixel.color= sample2D(ldr_buffer, frame_texcoords);
 #ifndef LDR_ONLY
 	displaced_pixel.dark_color= sample2D(hdr_buffer, frame_texcoords);

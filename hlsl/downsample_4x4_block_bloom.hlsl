@@ -9,7 +9,7 @@
 //@generate screen
 
 
-LOCAL_SAMPLER_2D(dark_source_sampler, 0);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_MAYBE(dark_source_sampler, 0);
 
 #ifdef pc
 float xenon_gamma_adjust(float x)
@@ -81,7 +81,7 @@ float4 default_ps(screen_output IN) : SV_Target
 	float intensity= dot(color.rgb, intensity_vector.rgb);					// max(max(color.r, color.g), color.b);
 	
 	// calculate bloom curve intensity
-	float bloom_intensity= max(intensity*scale.y, intensity-scale.x);		// ###ctchou $PERF could compute both parameters with a single mad followed by max
+	float bloom_intensity= max(intensity*ps_postprocess_scale.y, intensity- ps_postprocess_scale.x);		// ###ctchou $PERF could compute both parameters with a single mad followed by max
 	
 	// calculate bloom color
 	float3 bloom_color= color * (bloom_intensity / intensity);

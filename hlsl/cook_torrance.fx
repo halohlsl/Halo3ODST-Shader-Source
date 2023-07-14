@@ -107,7 +107,7 @@ void calc_material_analytic_specular_cook_torrance_ps(
 	if (use_material_texture)
 	{	
 		//over ride shader supplied values with what's from the texture
-		spatially_varying_material_parameters= sample2D(material_texture, transform_texcoord(texcoord, material_texture_xform));				
+		spatially_varying_material_parameters= sampleBiasGlobal2D(material_texture, transform_texcoord(texcoord, material_texture_xform));
 	}
 
 	specular_albedo_color= diffuse_albedo_color * spatially_varying_material_parameters.g + fresnel_color * (1-spatially_varying_material_parameters.g);
@@ -174,7 +174,7 @@ void calc_material_analytic_specular_cook_torrance_pbr_maps_ps(
 	// the following parameters can be supplied in the material texture
 	// r: specular coefficient
 	// g: roughless
-	spatially_varying_material_parameters = sample2D(material_texture, transform_texcoord(texcoord, material_texture_xform)).xxyy;
+	spatially_varying_material_parameters = sampleBiasGlobal2D(material_texture, transform_texcoord(texcoord, material_texture_xform)).xxyy;
 	spatially_varying_material_parameters.y = albedo_blend;
 	spatially_varying_material_parameters.z = environment_map_specular_contribution;
 
@@ -597,7 +597,7 @@ void calc_material_cook_torrance_pbr_maps_ps(
 	inout float3 diffuse_radiance
 )
 {
-	float3 spec_tint = sample2D(spec_tint_map, texcoord).xyz;
+	float3 spec_tint = sampleBiasGlobal2D(spec_tint_map, texcoord).xyz;
 
 #if defined(pc) && (DX_VERSION == 9)
 	if (p_shader_pc_specular_enabled != 0.f)

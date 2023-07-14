@@ -6,8 +6,8 @@
 #include "postprocess.fx"
 //@generate screen
 
-LOCAL_SAMPLER_2D(source_sampler, 0);
-LOCAL_SAMPLER_2D(dark_source_sampler, 1);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_MAYBE(source_sampler, 0);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_MAYBE(dark_source_sampler, 1);
 
 
 float4 default_ps(screen_output IN) : SV_Target
@@ -38,7 +38,7 @@ float4 default_ps(screen_output IN) : SV_Target
 #endif
 
 	float maximum= max(max(color.r, color.g), color.b);
-	float overwhite= max(maximum*scale.y, maximum-scale.x);		// ###ctchou $PERF could compute both paramters with a single mad followed by max
+	float overwhite= max(maximum*ps_postprocess_scale.y, maximum- ps_postprocess_scale.x);		// ###ctchou $PERF could compute both paramters with a single mad followed by max
 	color *= (overwhite/maximum);
 
 #ifdef pc

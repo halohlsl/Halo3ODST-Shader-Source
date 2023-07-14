@@ -62,10 +62,8 @@ void shadow_generate_ps(
 #define PCF_WIDTH 4
 #define PCF_HEIGHT 4
 
-#ifdef pc
-static const float2 pixel_size= float2(1.0/512.0f, 1.0/512.0f);		// ###ctchou $TODO THIS NEEDS TO BE PASSED IN!!!
-#endif
-
+static const float2 g_shadow_pixel_size = float2(1.0/512.0f, 1.0/512.0f);		// ###ctchou $TODO THIS NEEDS TO BE PASSED IN!!!
+#define PIXEL_SIZE g_shadow_pixel_size
 #include "texture.fx"
 
 
@@ -172,7 +170,7 @@ float sample_percentage_closer_PCF_5x5_block_predicated(float3 fragment_shadow_p
 
 	float4 blend;
 #ifdef pc
-   float2 frac_pos = fragment_shadow_position.xy / pixel_size + 0.5f;
+   float2 frac_pos = fragment_shadow_position.xy / g_shadow_pixel_size + 0.5f;
    blend.xy = frac(frac_pos);
 #else
 #ifndef VERTEX_SHADER

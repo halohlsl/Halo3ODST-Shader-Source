@@ -783,7 +783,7 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 	texcoord_ss.y= 1 - texcoord_ss.y;
 	texcoord_ss= k_water_player_view_constant.xy + texcoord_ss*k_water_player_view_constant.zw;
 			
-	float4 water_color_from_texture= sample2D(watercolor_texture, INTERPOLATORS.base_tex.xy);
+	float4 water_color_from_texture= sampleBiasGlobal2D(watercolor_texture, INTERPOLATORS.base_tex.xy);
 	water_color_from_texture.xyz*= watercolor_coefficient;	
 
 	float3 water_color;
@@ -811,16 +811,11 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 	else if (TEST_CATEGORY_OPTION(refraction, dynamic))
 	{
 		//	calculate water depth
-#if DX_VERSION == 11
+
 		float depth_width, depth_height;
 		depth_buffer.GetDimensions(depth_width, depth_height);
-		depth_water = depth_buffer.Load(int3((texcoord_ss * float2(depth_width, depth_height)), 0)).r;
-#else	
-		depth_water= sample2D(depth_buffer, texcoord_ss).r;
-#endif
-#if (DX_VERSION == 9) && defined(pc)
-		depth_water = k_water_view_depth_constant.x / depth_water + k_water_view_depth_constant.y; // Zbuf = -FN/(F-N) / z + F/(F-N)
-#endif // pc
+		depth_water = depth_buffer.Load(int3(calc_viewport_pixel_coords_from_uv(texcoord_ss), 0)).r;
+
 		//float4 point_underwater= float4(INTERPOLATORS.position_ss.xy, 1.0f - depth_water, 1.0f);		
 		float4 point_underwater= float4(INTERPOLATORS.position_ss.xy, depth_water, 1.0f);		
 		point_underwater= mul(point_underwater, k_water_view_xform_inverse);
@@ -837,11 +832,7 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 		float2 delta= 0.001f;	//###xwan avoid fetch back pixel, it could be considered into k_water_player_view_constant
 		texcoord_refraction= clamp(texcoord_refraction, k_water_player_view_constant.xy+delta, k_water_player_view_constant.xy+k_water_player_view_constant.zw-delta);
 
-#if DX_VERSION == 11
-		depth_refraction = depth_buffer.Load(int3((texcoord_refraction * float2(depth_width, depth_height)), 0)).r;
-#else		
-		depth_refraction= sample2D(depth_buffer, texcoord_refraction).r;	
-#endif
+		depth_refraction = depth_buffer.Load(int3(calc_viewport_pixel_coords_from_uv(texcoord_refraction), 0)).r;
 #if (DX_VERSION == 9) && defined(pc)
 		depth_refraction = k_water_view_depth_constant.x / depth_refraction + k_water_view_depth_constant.y; // Zbuf = -FN/(F-N) / z + F/(F-N)
 #endif // pc
@@ -861,11 +852,8 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 		color_refraction_bed= color_refraction;	//	pure color of under water stuff
 
 		//	check real refraction
-#if DX_VERSION == 11
-		depth_refraction = depth_buffer.Load(int3((texcoord_refraction * float2(depth_width, depth_height)), 0)).r;
-#else
-		depth_refraction= sample2D(depth_buffer, texcoord_refraction).r;	
-#endif
+		depth_refraction = depth_buffer.Load(int3(calc_viewport_pixel_coords_from_uv(texcoord_refraction), 0)).r;
+
 #if (DX_VERSION == 9) && defined(pc)
 		depth_refraction = k_water_view_depth_constant.x / depth_refraction + k_water_view_depth_constant.y; // Zbuf = -FN/(F-N) / z + F/(F-N)
 #endif // pc
@@ -930,8 +918,8 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 		if ( foam_factor > 0.002f )
 		{
 			// blend textures
-			float4 foam= sample2D(foam_texture, transform_texcoord(INTERPOLATORS.texcoord.xy, foam_texture_xform));
-			float4 foam_detail= sample2D(foam_texture_detail, transform_texcoord(INTERPOLATORS.texcoord.xy, foam_texture_detail_xform));
+			float4 foam= sampleBiasGlobal2D(foam_texture, transform_texcoord(INTERPOLATORS.texcoord.xy, foam_texture_xform));
+			float4 foam_detail= sampleBiasGlobal2D(foam_texture_detail, transform_texcoord(INTERPOLATORS.texcoord.xy, foam_texture_detail_xform));
 			foam_color.rgb= foam.rgb * foam_detail.rgb;
 			foam_color.a= foam.a * foam_detail.a;		
 			foam_factor= foam_color.w * foam_factor;
@@ -957,7 +945,7 @@ accum_pixel water_shading(s_water_interpolators INTERPOLATORS)
 
 		// flip z
 		reflect_dir.z= abs(reflect_dir.z);
-		float4 environment_sample= sampleCUBE(environment_map, reflect_dir);
+		float4 environment_sample= sampleBiasGlobalCUBE(environment_map, reflect_dir);
 
 		// apply HDR from alpha, but dim it in shadow area
 		float2 parts;

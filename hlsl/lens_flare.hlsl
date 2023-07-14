@@ -10,7 +10,7 @@
 #include "lens_flare_registers.fx"
 //@generate screen
 
-LOCAL_SAMPLER_2D(source_sampler, 0);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_MAYBE(source_sampler, 0);
 
 void default_vs(
 	vertex_type IN,
@@ -39,6 +39,6 @@ float4 default_ps(
  	
  	float4 out_color= modulation_factor.x*color_to_nth*color + color_times_tint;
 	
- 	float brightness= tint_color.a*ILLUM_EXPOSURE*scale.r*modulation_factor.z;
+ 	float brightness= tint_color.a*ILLUM_EXPOSURE*ps_postprocess_scale.r*modulation_factor.z;
  	return out_color*brightness;
 }

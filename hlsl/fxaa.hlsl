@@ -7,9 +7,6 @@
 
 //@generate screen
 
-#define SCREEN_WIDTH_RCP   k_postprocess_pixel_size.x
-#define SCREEN_HEIGHT_RCP  k_postprocess_pixel_size.y
-
 
 #define HLSL_ATTRIB_ISOLATE [isolate]
 #define HLSL_ATTRIB_UNROLL  [unroll]
@@ -17,11 +14,9 @@
 
 
 #define FXAA_PC 1
-#if DX_VERSION == 9
-#define FXAA_HLSL_3 1
-#elif DX_VERSION == 11
+
 #define FXAA_HLSL_5 1
-#endif
+
 #define FXAA_QUALITY__PRESET 12
 //#define FXAA_GREEN_AS_LUMA 1
 
@@ -36,7 +31,7 @@
 #include "fxaa3_11.fx"
 #endif
 
-LOCAL_SAMPLER_2D(source_sampler, 0);
+LOCAL_SAMPLER_2D_IN_VIEWPORT_ALLWAYS(source_sampler, 0);
 
 struct VS_OUTPUT
 {
@@ -90,7 +85,7 @@ float4 default_ps(
    
    return FxaaPixelShader(input.uv.xy,
       source_sampler,
-      pixel_size.xy,
+	  ps_postprocess_pixel_size.xy,
       __fxaaQualitySubpix,
       __fxaaQualityEdgeThreshold,
       __fxaaQualityEdgeThresholdMin
